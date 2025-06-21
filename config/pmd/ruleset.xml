@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<ruleset name="Custom Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD ruleset for Spring Boot MongoDB CRUD application
+    </description>
+
+    <!-- Include all rules from these categories -->
+    <rule ref="category/java/bestpractices.xml"/>
+    <rule ref="category/java/codestyle.xml"/>
+    <rule ref="category/java/design.xml"/>
+    <rule ref="category/java/documentation.xml"/>
+    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/multithreading.xml"/>
+    <rule ref="category/java/performance.xml"/>
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Exclude some overly strict rules -->
+    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml/OnlyOneReturn">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessiveClassLength">
+        <priority>4</priority>
+        <properties>
+            <property name="minimum" value="500"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessiveMethodLength">
+        <priority>4</priority>
+        <properties>
+            <property name="minimum" value="50"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessivePublicCount">
+        <priority>4</priority>
+        <properties>
+            <property name="minimum" value="20"/>
+        </properties>
+    </rule>
+
+    <!-- Exclude rules that don't apply to Spring Boot applications -->
+    <rule ref="category/java/errorprone.xml/BeanMembersShouldSerialize">
+        <priority>4</priority>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/MissingSerialVersionUID">
+        <priority>4</priority>
+    </rule>
+
+</ruleset> 

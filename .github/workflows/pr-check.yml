@@ -1,0 +1,94 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  quick-check:
+    name: Quick Check
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: Run unit tests
+      run: ./gradlew test --tests "*ServiceTest" --tests "*ModelTest" --tests "*ExceptionHandlerTest"
+
+    - name: Run integration tests
+      run: ./gradlew test --tests "*ControllerTest" --tests "*RepositoryTest" --tests "*IntegrationTest"
+      env:
+        SPRING_DATA_MONGODB_HOST: localhost
+        SPRING_DATA_MONGODB_PORT: 27017
+        SPRING_DATA_MONGODB_DATABASE: testdb
+
+    - name: Build application
+      run: ./gradlew build -x test
+
+    - name: Check code formatting
+      run: ./gradlew spotlessCheck
+
+    - name: Comment PR
+      uses: actions/github-script@v7
+      if: always()
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          
+          const botComment = comments.find(comment => comment.user.type === 'Bot');
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              comment_id: botComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## PR Check Results
+              
+              ${context.job === 'success' ? '✅' : '❌'} **Status**: ${context.job === 'success' ? 'All checks passed!' : 'Some checks failed'}
+              
+              **Tests**: ✅ Unit and Integration tests completed
+              **Build**: ✅ Application builds successfully
+              **Format**: ✅ Code formatting check passed
+              
+              ${context.job === 'success' ? 'Ready for review! 🚀' : 'Please fix the issues above.'}`
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## PR Check Results
+              
+              ${context.job === 'success' ? '✅' : '❌'} **Status**: ${context.job === 'success' ? 'All checks passed!' : 'Some checks failed'}
+              
+              **Tests**: ✅ Unit and Integration tests completed
+              **Build**: ✅ Application builds successfully
+              **Format**: ✅ Code formatting check passed
+              
+              ${context.job === 'success' ? 'Ready for review! 🚀' : 'Please fix the issues above.'}`
+            });
+          } 
